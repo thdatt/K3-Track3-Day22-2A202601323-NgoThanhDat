@@ -1,15 +1,25 @@
-.PHONY: setup test lint typecheck format run-eval clean
+.PHONY: setup test lint typecheck format validate train run-eval regression run-all clean
+PYTHON ?= python
+ENV = PYTHONPATH=src:.
 setup:
-	pip install -e '.[dev]'
+	$(PYTHON) -m pip install -e '.[dev]'
 test:
-	pytest -q
+	$(ENV) $(PYTHON) -m pytest -q
 lint:
-	ruff check src tests
+	$(PYTHON) -m ruff check src tests scripts
 typecheck:
-	mypy src
+	$(PYTHON) -m mypy src
 format:
-	ruff format src tests
+	$(PYTHON) -m ruff format src tests scripts
+validate:
+	$(ENV) $(PYTHON) -m preference_lab.cli validate data/sample_preferences.jsonl
+train:
+	$(ENV) $(PYTHON) -m preference_lab.cli train --config configs/local.yaml
 run-eval:
-	pref-lab evaluate --config configs/local.yaml
+	$(ENV) $(PYTHON) -m preference_lab.cli evaluate --config configs/local.yaml
+regression:
+	$(ENV) $(PYTHON) -m preference_lab.cli regression --config configs/local.yaml
+run-all:
+	$(ENV) $(PYTHON) -m preference_lab.cli run-all --config configs/local.yaml
 clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache outputs

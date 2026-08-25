@@ -9,3 +9,6 @@ wandb/
 *.safetensors
 *.bin
 .env
+uv.lock
+*.egg-info/
+data/synthetic_preferences.jsonl

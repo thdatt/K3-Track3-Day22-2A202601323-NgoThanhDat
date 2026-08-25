@@ -1,13 +1,6 @@
-# Preference Alignment Lab: DPO \& ORPO Starter
+# Preference Alignment Lab: DPO & ORPO
 
-Production-style skeleton for a 2-hour lab on preference alignment. The repository is intentionally incomplete: students must implement the logic marked `TODO(student)`.
-
-## Learning goals
-
-- Validate and load preference pairs (`prompt`, `chosen`, `rejected`).
-- Implement or wrap DPO/ORPO training logic.
-- Build evaluation metrics for pairwise preference and regression prompts.
-- Practice production habits: typed code, configs, tests, Makefile, CI, docs.
+A small production-style preference-alignment lab covering data hygiene, DPO/ORPO losses, prompt-grouped splitting, held-out evaluation, regression tests, and experiment reporting.
 
 ## Quickstart
 
@@ -16,48 +9,53 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
 make test
+make run-all
 ```
 
-Optional training dependencies:
+If you are running directly from a source checkout without installing the package:
 
 ```bash
-pip install -e '.[dev,train]'
+export PYTHONPATH=src:.
+python -m pytest -q
+python -m preference_lab.cli run-all --config configs/local.yaml
 ```
 
-## Lab rules
+## End-to-end outputs
 
-1. Do not rewrite the whole repository.
-2. Implement only the `TODO(student)` blocks unless you have a clear reason.
-3. Keep tests passing after each milestone.
-4. Do not commit secrets, model weights, or private datasets.
+`run-all` validates the 24 preference pairs, creates an 80/20 prompt-grouped split, trains the CPU DPO implicit-reward scorer, evaluates the four held-out pairs, and runs four safety/instruction regression pairs. Results are written to `outputs/`.
 
-## Milestones
+See `docs/REPORT.md` for the completed experiment report and `docs/data_card.md` for dataset documentation.
 
-| Time | Goal | Command |
-|---|---|---|
-| 0-30 min | Setup and inspect sample data | `make test` |
-| 30-50 min | Implement dataset validation/collator | `pytest tests/test_data.py` |
-| 50-70 min | (Optional) Generate synthetic data | `python scripts/generate_data.py` |
-| 70-100 min | Implement DPO or ORPO TODO | `pytest tests/test_losses.py` |
-| 100-115 min | Implement evaluation and report | `pref-lab evaluate --config configs/local.yaml` |
-| 115-120 min | One-minute demo | `cat outputs/metrics.json` |
+## Training modes
+
+- `dpo`: reproducible CPU DPO optimization of a lightweight linear implicit-reward scorer. This requires only NumPy and does not download model weights.
+- `mock`: preserves the original starter mock interface for tests/examples.
+- `orpo_loss`: the ORPO loss utility is implemented and unit-tested, but the end-to-end CPU trainer in this submission is intentionally configured for DPO.
+
+The CPU scorer is an educational alignment model, **not** a full LLM fine-tune. A full TRL/Transformers training path can replace it when model weights and training dependencies are available.
+
+## Commands
+
+```bash
+make test
+make validate
+make train
+make run-eval
+make regression
+make run-all
+bash scripts/smoke_test.sh
+```
+
+Optional synthetic preference generation uses `scripts/generate_data.py` and requires `OPENAI_API_KEY` or `OPENROUTER_API_KEY`.
 
 ## Repository layout
 
 ```text
-src/preference_lab/     Python package
-data/                   Small sample preference dataset
-configs/                YAML configs for local experiments
-docs/                   Lab guide, rubric, data card template
-scripts/                Utility entrypoints
-tests/                  Unit tests for student work
+src/preference_lab/     package and DPO/ORPO logic
+data/                   training and regression preference pairs
+configs/                experiment configuration
+docs/                   report, data card, lab notes
+scripts/                synthetic-data and smoke-test entrypoints
+tests/                  automated tests
+outputs/                 generated experiment artifacts (gitignored)
 ```
-
-## Production checklist
-
-- [ ] Dataset schema validated.
-- [ ] Train/eval split by prompt, not by row.
-- [ ] Config committed; generated artifacts ignored.
-- [ ] Metrics saved as JSON.
-- [ ] Safety regression prompts run before/after training.
-- [ ] Data card updated.
